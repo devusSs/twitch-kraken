@@ -1,0 +1,20 @@
+{
+  "postgres": {
+    "host": "",
+    "port": 0,
+    "user": "",
+    "password": "",
+    "database": ""
+  },
+  "twitch": {
+    "bot_login": "",
+    "bot_password": "without leading oauth:",
+    "join_channel": "",
+    "bot_owner": "",
+    "editors": [""]
+  },
+  "command": {
+    "prefix": "",
+    "default_cooldown": 0
+  }
+}
