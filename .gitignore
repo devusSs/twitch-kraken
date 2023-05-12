@@ -1,8 +1,15 @@
 config.dev.json
+
 logs/
-*.log
 debug/
 release/
+dist/
+publish.sh
+tmp/
+testing/
+.goreleaser.yaml
+TODOS.txt
+
 .vscode/*
 !.vscode/extensions.json
 .idea
