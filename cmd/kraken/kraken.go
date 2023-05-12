@@ -161,9 +161,23 @@ func main() {
 	logging.WriteSuccess("Successfully checked config")
 
 	// Authenticate against services here (Twitch, Spotify, ...).
+	// This is a blocking operation, code will not succeed.
 	auth.DoTwitchAuth(cfg)
 
-	log.Printf("[%s] Got user access token from Twitch: %s\n", logging.InfoSign, authtwitch.AccessToken)
+	// Refresh the tokens before they expire again.
+	twitchPreDuration, err := time.ParseDuration("-60s")
+	if err != nil {
+		log.Fatalf("[%s] Error parsing durations: %s\n", logging.ErrorSign, err.Error())
+	}
+
+	twitchAuthTicker := time.NewTicker(time.Duration(authtwitch.TokenExpiry.Add(twitchPreDuration).Second()))
+	go func() {
+		for range twitchAuthTicker.C {
+			if err := auth.RefreshTokensFunc(); err != nil {
+				log.Fatalf("[%s] Error refreshing Twitch auth tokens: %s\n", logging.ErrorSign, err.Error())
+			}
+		}
+	}()
 
 	svc, err := postgres.New(cfg)
 	if err != nil {
@@ -246,6 +260,8 @@ func main() {
 		log.Fatalf("[%s] Error closing database connection: %s", logging.ErrorSign, err.Error())
 	}
 	wg.Done()
+
+	twitchAuthTicker.Stop()
 
 	logging.WriteSuccess("Successfully closed database connection")
 
