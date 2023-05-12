@@ -38,12 +38,18 @@ func main() {
 
 	flag.Parse()
 
+	// Print the version / build information if user wants to, exits after.
 	if *versionMode {
 		updater.PrintBuildInformationRaw()
 		return
 	}
 
-	log.Printf("[%s] Checking for upadtes...\n", logging.InfoSign)
+	// Let's init the map for clear screen functions for supported OS.
+	//
+	// Windows, Linux, MacOS - anything else will log.Fatal().
+	system.InitClearScreen()
+
+	log.Printf("[%s] Checking for updates...\n", logging.InfoSign)
 
 	// Update check - check for release url.
 	updateURL, newVersion, updateChangelog, err := updater.FindLatestReleaseURL()
@@ -82,6 +88,10 @@ func main() {
 
 		// TODO: maybe print warning to Twitch chat as well? / or send whisper msg to owner
 	})
+
+	log.Printf("[%s] Set up periodic update check (1 hour)\n", logging.SuccessSign)
+
+	system.CallClear()
 
 	if err := logging.CreateLogsDirectory(*logPath); err != nil {
 		log.Fatalf("[%s] Error creating logs directory: %s", logging.ErrorSign, err.Error())
