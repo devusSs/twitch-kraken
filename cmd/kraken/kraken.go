@@ -34,16 +34,6 @@ func main() {
 
 	flag.Parse()
 
-	// Run diagnosis if user wishes to.
-	if *diagMode {
-		errCount, err := diagnosis.RunDiagnosis(*logPath, *cfgPath)
-		if err != nil {
-			log.Fatalf("Error running diagnosis: %s", err.Error())
-		}
-		fmt.Printf("\n[S] Total errors found: %d\n", errCount)
-		return
-	}
-
 	if err := logging.CreateLogsDirectory(*logPath); err != nil {
 		log.Fatalf("[%s] Error creating logs directory: %s", logging.ErrorSign, err.Error())
 	}
@@ -56,6 +46,16 @@ func main() {
 
 	// ! It's safe to use the logging.WriteX methods from here.
 
+	// Run diagnosis if user wishes to.
+	if *diagMode {
+		errCount, err := diagnosis.RunDiagnosis(*logPath, *cfgPath)
+		if err != nil {
+			log.Fatalf("Error running diagnosis: %s", err.Error())
+		}
+		fmt.Printf("\n[S] Total errors found: %d\n", errCount)
+		return
+	}
+
 	// Runtime check which might issue a warning since this program should run in headless mode on Linux.
 	osV := system.DetermineOS()
 	if osV == "unknown" {
@@ -66,18 +66,10 @@ func main() {
 		system.PrintOSWarning(osV)
 	}
 
-	// Checks the network's latency to the Twitch servers and issues a warning (> 500) if the latency is too high.
-	avg, err := system.TestConnection()
-	if err != nil {
+	// Test DNS resolution so we know if we are connected to a network.
+	if err := system.TestConnection(); err != nil {
 		logging.WriteError(err)
 		os.Exit(1)
-	}
-
-	// Issue a warning if the latency exceeds 500 ms.
-	if avg < 500 {
-		logging.WriteInfo(fmt.Sprintf("Average ping time to twitch.tv: %.0f ms", avg))
-	} else {
-		logging.WriteWarn(fmt.Sprintf("Average ping exceeds 500 ms (%.0f ms). Program calls may be delayed", avg))
 	}
 
 	cfg, err := config.LoadConfig(*cfgPath)

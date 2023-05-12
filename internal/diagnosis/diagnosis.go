@@ -56,16 +56,12 @@ func RunDiagnosis(logPath, cfgPath string) (int, error) {
 		printError(fmt.Sprintf("Determined OS \"%s\" may be unsupported (does not match recommended OS Linux)", osV))
 	}
 
-	// Check the network's connection to Twitch.
-	printInfo("Testing connection to Twitch...")
+	// Check the network's DNS resolution.
+	printInfo("Testing DNS resolution...")
 
-	avg, err := system.TestConnection()
+	err = system.TestConnection()
 	if err != nil {
 		return errCount, err
-	}
-	if avg > 500 {
-		errCount++
-		printError(fmt.Sprintf("Average ping exceeds 500 ms (%.0f ms). Program calls may be delayed", avg))
 	}
 
 	// Check the error.log file for information.
