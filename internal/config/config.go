@@ -21,6 +21,14 @@ type Config struct {
 		BotOwner    string   `json:"bot_owner"`    // actual bot owner / channel owner, usually matches JoinChannel
 		Editors     []string `json:"editors"`      // not mods, users with access to internal bot commands
 	} `json:"twitch"`
+	// Since the bot needs access to user resources as well as api resources
+	// we will need developer specific vars.
+	// https://dev.twitch.tv/
+	TwitchAuth struct {
+		ClientID     string `json:"client_id"`
+		ClientSecret string `json:"client_secret"`
+		RedirectURL  string `json:"redirect_url"`
+	} `json:"twitch_auth"`
 	Command struct {
 		Prefix          string `json:"prefix"`           // prefix to call commands from chat, like "!" or "."
 		DefaultCooldown int    `json:"default_cooldown"` // usually 0 or < 5 seconds
@@ -82,6 +90,18 @@ func (c *Config) CheckConfig() error {
 
 	if c.Twitch.BotOwner == "" {
 		return fmt.Errorf("missing key: twitch bot owner")
+	}
+
+	if c.TwitchAuth.ClientID == "" {
+		return fmt.Errorf("missing key: twitch auth client id")
+	}
+
+	if c.TwitchAuth.ClientSecret == "" {
+		return fmt.Errorf("missing key: twitch auth client secret")
+	}
+
+	if c.TwitchAuth.RedirectURL == "" {
+		return fmt.Errorf("missing key: twitch auth redirect url")
 	}
 
 	if c.Command.Prefix == "" {

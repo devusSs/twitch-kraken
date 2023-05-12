@@ -13,6 +13,11 @@
     "bot_owner": "",
     "editors": [""]
   },
+  "twitch_auth": {
+    "client_id": "",
+    "client_secret": "",
+    "redirect_url": ""
+  },
   "command": {
     "prefix": "",
     "default_cooldown": 0
