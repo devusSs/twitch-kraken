@@ -15,6 +15,7 @@ import (
 	"github.com/devusSs/twitch-kraken/internal/diagnosis"
 	"github.com/devusSs/twitch-kraken/internal/logging"
 	"github.com/devusSs/twitch-kraken/internal/system"
+	"github.com/devusSs/twitch-kraken/internal/updater"
 )
 
 func main() {
@@ -32,7 +33,51 @@ func main() {
 	// It will print any results from error.log here to help the user figure out potential errors at runtime.
 	diagMode := flag.Bool("d", false, "[OPT] runs the app in diagnosis mode")
 
+	// Prints available app build information.
+	versionMode := flag.Bool("v", false, "[OPT prints the build information of the app")
+
 	flag.Parse()
+
+	if *versionMode {
+		updater.PrintBuildInformationRaw()
+		return
+	}
+
+	// Update check - check for release url.
+	updateURL, newVersion, updateChangelog, err := updater.FindLatestReleaseURL()
+	if err != nil {
+		log.Fatalf("[%s] Error checking for updates: %s", logging.ErrorSign, err.Error())
+	}
+
+	// Update check - check for release url.
+	newVersionAvailable, err := updater.NewerVersionAvailable(newVersion)
+	if err != nil {
+		log.Fatalf("[%s] Error checking for updates: %s", logging.ErrorSign, err.Error())
+	}
+
+	// Update check - perform the actual update.
+	if newVersionAvailable {
+		log.Printf("[%s] New version available, performing update now...\n", logging.WarnSign)
+
+		if err := updater.DoUpdate(updateURL); err != nil {
+			log.Fatalf("[%s] Error performing updates: %s", logging.ErrorSign, err.Error())
+		}
+
+		log.Printf("[%s] Update changelog (%s): %s\n", logging.InfoSign, newVersion, updateChangelog)
+
+		log.Printf("[%s] Update successful, please restart the app\n", logging.SuccessSign)
+
+		return
+	}
+
+	// Update check - setup periodic update check.
+	time.AfterFunc(1*time.Hour, func() {
+		if err := updater.PeriodicUpdateCheck(); err != nil {
+			log.Fatalf("[%s] Error on periodic update check: %s", logging.ErrorSign, err.Error())
+		}
+
+		// TODO: maybe print warning to Twitch chat as well? / or send whisper msg to owner
+	})
 
 	if err := logging.CreateLogsDirectory(*logPath); err != nil {
 		log.Fatalf("[%s] Error creating logs directory: %s", logging.ErrorSign, err.Error())
