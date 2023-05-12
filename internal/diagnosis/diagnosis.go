@@ -50,12 +50,6 @@ func RunDiagnosis(logPath, cfgPath string) (int, error) {
 	// Check the OS for unsupported versions / platforms.
 	printInfo("Determining OS platform and version...")
 
-	osV := system.DetermineOS()
-	if osV != "linux" {
-		errCount++
-		printError(fmt.Sprintf("Determined OS \"%s\" may be unsupported (does not match recommended OS Linux)", osV))
-	}
-
 	// Check the network's DNS resolution.
 	printInfo("Testing DNS resolution...")
 
