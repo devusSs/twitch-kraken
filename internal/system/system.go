@@ -2,7 +2,6 @@
 package system
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -31,15 +30,6 @@ func DetermineOS() string {
 	default:
 		return "unknown"
 	}
-}
-
-// While go compiles to most platforms, this program is intended for usage on Linux (headless) or MacOS.
-//
-// Some functions like ping tests will not be executed when on Windows and the program will issue a warning.
-//
-// This may be changed in future versions.
-func PrintOSWarning(osV string) {
-	logging.WriteWarn(fmt.Sprintf("Detected OS: %s ; recommended: Linux", osV))
 }
 
 // Detects if there is a working DNS resolver on the host or the network.
