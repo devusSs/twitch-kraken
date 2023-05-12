@@ -3,7 +3,13 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"math/rand"
+	"time"
 )
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 // Might not be the best solution. Copied from:
 //
@@ -27,4 +33,18 @@ func CheckStringSliceForDuplicates(s []string, str string) bool {
 func MarshalStruct(input interface{}) (string, error) {
 	bytes, err := json.Marshal(input)
 	return string(bytes), err
+}
+
+// Helper function to generate random string
+func stringWithCharset(length int, charset string) string {
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+// Generate a random string of len x.
+func RandomString(length int) string {
+	return stringWithCharset(length, charset)
 }
