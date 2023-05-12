@@ -43,6 +43,8 @@ func main() {
 		return
 	}
 
+	log.Printf("[%s] Checking for upadtes...\n", logging.InfoSign)
+
 	// Update check - check for release url.
 	updateURL, newVersion, updateChangelog, err := updater.FindLatestReleaseURL()
 	if err != nil {
@@ -68,6 +70,8 @@ func main() {
 		log.Printf("[%s] Update successful, please restart the app\n", logging.SuccessSign)
 
 		return
+	} else {
+		log.Printf("[%s] App is up to date\n", logging.SuccessSign)
 	}
 
 	// Update check - setup periodic update check.
