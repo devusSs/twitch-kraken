@@ -92,7 +92,10 @@ func InitTwitchAuth(cfg *config.Config) func(path string, handler handler) {
 				}
 
 				log.Println(err)
-				w.Write([]byte(errorString))
+				_, err := w.Write([]byte(errorString))
+				if err != nil {
+					log.Fatalf("[%s] Error writing http response: %s\n", logging.ErrorSign, err.Error())
+				}
 				w.WriteHeader(errorCode)
 				return
 			}
@@ -132,7 +135,10 @@ func StartTwitchAuth(srv *http.Server) {
 func handleRoot(w http.ResponseWriter, r *http.Request) (err error) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`<html><body><a href="/login">Login using Twitch</a></body></html>`))
+	_, err = w.Write([]byte(`<html><body><a href="/login">Login using Twitch</a></body></html>`))
+	if err != nil {
+		return err
+	}
 
 	return
 }
@@ -142,8 +148,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) (err error) {
 func handleLogin(w http.ResponseWriter, r *http.Request) (err error) {
 	session, err := cookieStore.Get(r, oauthSessionName)
 	if err != nil {
-		log.Printf("corrupted session %s -- generated new", err)
-		err = nil
+		return err
 	}
 
 	var tokenBytes [255]byte
