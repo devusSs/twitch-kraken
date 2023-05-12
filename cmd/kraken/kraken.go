@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -132,6 +133,10 @@ func main() {
 	if osV == "unknown" {
 		logging.WriteError("Unsupported OS, exiting.")
 		os.Exit(1)
+	}
+	if strings.ToLower(osV) == "linux" {
+		logging.WriteWarn("Detected Linux. Please make sure to NOT run in headless mode")
+		logging.WriteWarn("You will need access to a browser to authenticate")
 	}
 
 	// Test DNS resolution so we know if we are connected to a network.
