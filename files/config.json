@@ -16,7 +16,8 @@
   "twitch_auth": {
     "client_id": "",
     "client_secret": "",
-    "redirect_url": ""
+    "redirect_url": "",
+    "secure_cookie": "makethissensibleandsafe"
   },
   "command": {
     "prefix": "",

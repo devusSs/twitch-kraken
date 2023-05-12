@@ -28,6 +28,7 @@ type Config struct {
 		ClientID     string `json:"client_id"`
 		ClientSecret string `json:"client_secret"`
 		RedirectURL  string `json:"redirect_url"`
+		SecureCookie string `json:"secure_cookie"`
 	} `json:"twitch_auth"`
 	Command struct {
 		Prefix          string `json:"prefix"`           // prefix to call commands from chat, like "!" or "."
@@ -102,6 +103,10 @@ func (c *Config) CheckConfig() error {
 
 	if c.TwitchAuth.RedirectURL == "" {
 		return fmt.Errorf("missing key: twitch auth redirect url")
+	}
+
+	if c.TwitchAuth.SecureCookie == "" {
+		return fmt.Errorf("missing key: twitch auth secure cookie")
 	}
 
 	if c.Command.Prefix == "" {
