@@ -41,3 +41,12 @@ diag: build
 	@cp -R ./files ./testing
 	@cp ./release/kraken_mac_arm64/kraken ./testing
 	@cd ./testing && ./kraken -c "./files/config.dev.json" -d
+
+# DO NOT CHANGE.
+secure-cookie: build
+	@clear
+	@-mkdir ./testing
+	@-mkdir ./testing/files
+	@cp -R ./files ./testing
+	@cp ./release/kraken_mac_arm64/kraken ./testing
+	@cd ./testing && ./kraken -sc

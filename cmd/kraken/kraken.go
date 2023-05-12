@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/devusSs/twitch-kraken/internal/auth"
+	"github.com/devusSs/twitch-kraken/internal/auth/authtwitch"
 	"github.com/devusSs/twitch-kraken/internal/bot"
 	"github.com/devusSs/twitch-kraken/internal/bot/gatekeeper"
 	"github.com/devusSs/twitch-kraken/internal/config"
@@ -16,6 +18,7 @@ import (
 	"github.com/devusSs/twitch-kraken/internal/logging"
 	"github.com/devusSs/twitch-kraken/internal/system"
 	"github.com/devusSs/twitch-kraken/internal/updater"
+	"github.com/devusSs/twitch-kraken/internal/utils"
 )
 
 func main() {
@@ -36,11 +39,20 @@ func main() {
 	// Prints available app build information.
 	versionMode := flag.Bool("v", false, "[OPT prints the build information of the app")
 
+	// Generates a secure cookie which will be needed for config file.
+	scCookieGen := flag.Bool("sc", false, "[OPT] only generate a secure cookie and exit")
+
 	flag.Parse()
 
 	// Print the version / build information if user wants to, exits after.
 	if *versionMode {
 		updater.PrintBuildInformationRaw()
+		return
+	}
+
+	// Generate a random string if user wants to and exit.
+	if *scCookieGen {
+		log.Printf("[%s] Add to config, DO NOT SHARE: %s\n", logging.WarnSign, utils.RandomString(24))
 		return
 	}
 
@@ -121,9 +133,6 @@ func main() {
 		logging.WriteError("Unsupported OS, exiting.")
 		os.Exit(1)
 	}
-	if osV != "linux" {
-		system.PrintOSWarning(osV)
-	}
 
 	// Test DNS resolution so we know if we are connected to a network.
 	if err := system.TestConnection(); err != nil {
@@ -145,6 +154,11 @@ func main() {
 	}
 
 	logging.WriteSuccess("Successfully checked config")
+
+	// Authenticate against services here (Twitch, Spotify, ...).
+	auth.DoTwitchAuth(cfg)
+
+	log.Printf("[%s] Got user access token from Twitch: %s\n", logging.InfoSign, authtwitch.AccessToken)
 
 	svc, err := postgres.New(cfg)
 	if err != nil {
