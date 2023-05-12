@@ -1,32 +1,43 @@
+# Update the version to your needs.
+BUILD_VERSION = $(KRAKEN_BUILD_VERSION)
+BUILD_DATE=$$(date +%Y.%m.%d-%H:%M:%S)
+
+# DO NOT CHANGE.
 build:
-	@rm -rf release/
+	@[ "${KRAKEN_BUILD_VERSION}" ] || ( echo "KRAKEN_BUILD_VERSION is not set"; exit 1 )
+	@echo "Building app for Windows (AMD64), Linux (AMD64) & MacOS (ARM64)..."
 	@go mod tidy
-	@echo "Building for Linux (AMD64) & MacOS (ARM64)..."
-	@GOOS=linux GOARCH=amd64 go build -o release/kraken-lin64/ ./...
-	@GOOS=darwin GOARCH=arm64 go build -o release/kraken-macARM64/ ./...
-	@echo "Done building"
+	@GOOS=windows GOARCH=amd64 go build -v -trimpath -ldflags="-s -w -X main.buildVersion=${BUILD_VERSION} -X main.buildDate=${BUILD_DATE}" -o release/kraken_win_amd64/ ./...
+	@GOOS=linux GOARCH=amd64 go build -v -trimpath -ldflags="-s -w -X main.buildVersion=${BUILD_VERSION} -X main.buildDate=${BUILD_DATE}" -o release/kraken_lin_amd64/ ./...
+	@GOOS=darwin GOARCH=arm64 go build -v -trimpath -ldflags="-s -w -X main.buildVersion=${BUILD_VERSION} -X main.buildDate=${BUILD_DATE}" -o release/kraken_mac_arm64/ ./...
+	@echo "Done building app"
 
+# DO NOT CHANGE.
 clean:
-	@rm -rf release/
-	@rm -rf debug/
-	@rm -rf logs/
+	@clear
 	@go mod tidy
-	@docker stop kraken
-	@docker rm kraken
-	@clear
+	@rm -rf ./debug/
+	@rm -rf ./release/
+	@rm -rf ./dist/
+	@rm -rf ./logs/
+	@rm -rf ./tmp/
+	@rm -rf ./testing/
 
-postgres:
-	@docker run --name kraken -e POSTGRES_USER=kraken -e POSTGRES_PASSWORD=kraken -p 5432:5432 -v /var/lib/postgresql/data -d postgres
-
-dev:
-	@rm -rf debug/
-	@rm -rf logs/
-	@go mod tidy
+# DO NOT CHANGE.
+dev: build
 	@clear
-	@go build -o debug/ ./...
-	@./debug/kraken -c "./files/config.dev.json"
+	@rm -rf ./testing
+	@mkdir ./testing
+	@mkdir ./testing/files
+	@cp -R ./files ./testing
+	@cp ./release/kraken_mac_arm64/kraken ./testing
+	@cd ./testing && ./kraken -c "./files/config.dev.json"
 
-diag:
+# DO NOT CHANGE.
+diag: build
 	@clear
-	@go build -o debug/ ./...
-	@./debug/kraken -c "./files/config.dev.json" -d
+	@-mkdir ./testing
+	@-mkdir ./testing/files
+	@cp -R ./files ./testing
+	@cp ./release/kraken_mac_arm64/kraken ./testing
+	@cd ./testing && ./kraken -c "./files/config.dev.json" -d
