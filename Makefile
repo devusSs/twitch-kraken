@@ -31,7 +31,7 @@ dev: build
 	@mkdir ./testing/files
 	@cp -R ./files ./testing
 	@cp ./release/kraken_mac_arm64/kraken ./testing
-	@cd ./testing && ./kraken -c "./files/config.dev.json"
+	@cd ./testing && ./kraken -c "./files/config.dev.json" -su
 
 # DO NOT CHANGE.
 diag: build

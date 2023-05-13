@@ -43,6 +43,9 @@ func main() {
 	// Generates a secure cookie which will be needed for config file.
 	scCookieGen := flag.Bool("sc", false, "[OPT] only generate a secure cookie and exit")
 
+	// Skip checking for updates on startup and also skip periodic update checks.
+	skipUpdates := flag.Bool("su", false, "[OPT] skips updates")
+
 	flag.Parse()
 
 	// Print the version / build information if user wants to, exits after.
@@ -62,47 +65,51 @@ func main() {
 	// Windows, Linux, MacOS - anything else will log.Fatal().
 	system.InitClearScreen()
 
-	log.Printf("[%s] Checking for updates...\n", logging.InfoSign)
+	if !*skipUpdates {
+		log.Printf("[%s] Checking for updates...\n", logging.InfoSign)
 
-	// Update check - check for release url.
-	updateURL, newVersion, updateChangelog, err := updater.FindLatestReleaseURL()
-	if err != nil {
-		log.Fatalf("[%s] Error checking for updates: %s", logging.ErrorSign, err.Error())
-	}
-
-	// Update check - check for release url.
-	newVersionAvailable, err := updater.NewerVersionAvailable(newVersion)
-	if err != nil {
-		log.Fatalf("[%s] Error checking for updates: %s", logging.ErrorSign, err.Error())
-	}
-
-	// Update check - perform the actual update.
-	if newVersionAvailable {
-		log.Printf("[%s] New version available, performing update now...\n", logging.WarnSign)
-
-		if err := updater.DoUpdate(updateURL); err != nil {
-			log.Fatalf("[%s] Error performing updates: %s", logging.ErrorSign, err.Error())
+		// Update check - check for release url.
+		updateURL, newVersion, updateChangelog, err := updater.FindLatestReleaseURL()
+		if err != nil {
+			log.Fatalf("[%s] Error checking for updates: %s", logging.ErrorSign, err.Error())
 		}
 
-		log.Printf("[%s] Update changelog (%s): %s\n", logging.InfoSign, newVersion, updateChangelog)
+		// Update check - check for release url.
+		newVersionAvailable, err := updater.NewerVersionAvailable(newVersion)
+		if err != nil {
+			log.Fatalf("[%s] Error checking for updates: %s", logging.ErrorSign, err.Error())
+		}
 
-		log.Printf("[%s] Update successful, please restart the app\n", logging.SuccessSign)
+		// Update check - perform the actual update.
+		if newVersionAvailable {
+			log.Printf("[%s] New version available, performing update now...\n", logging.WarnSign)
 
-		return
+			if err := updater.DoUpdate(updateURL); err != nil {
+				log.Fatalf("[%s] Error performing updates: %s", logging.ErrorSign, err.Error())
+			}
+
+			log.Printf("[%s] Update changelog (%s): %s\n", logging.InfoSign, newVersion, updateChangelog)
+
+			log.Printf("[%s] Update successful, please restart the app\n", logging.SuccessSign)
+
+			return
+		} else {
+			log.Printf("[%s] App is up to date\n", logging.SuccessSign)
+		}
+
+		// Update check - setup periodic update check.
+		time.AfterFunc(1*time.Hour, func() {
+			if err := updater.PeriodicUpdateCheck(); err != nil {
+				log.Fatalf("[%s] Error on periodic update check: %s", logging.ErrorSign, err.Error())
+			}
+
+			// TODO: maybe print warning to Twitch chat as well? / or send whisper msg to owner
+		})
+
+		log.Printf("[%s] Set up periodic update check (1 hour)\n", logging.SuccessSign)
 	} else {
-		log.Printf("[%s] App is up to date\n", logging.SuccessSign)
+		log.Printf("[%s] Skipping updates...\n", logging.InfoSign)
 	}
-
-	// Update check - setup periodic update check.
-	time.AfterFunc(1*time.Hour, func() {
-		if err := updater.PeriodicUpdateCheck(); err != nil {
-			log.Fatalf("[%s] Error on periodic update check: %s", logging.ErrorSign, err.Error())
-		}
-
-		// TODO: maybe print warning to Twitch chat as well? / or send whisper msg to owner
-	})
-
-	log.Printf("[%s] Set up periodic update check (1 hour)\n", logging.SuccessSign)
 
 	system.CallClear()
 
