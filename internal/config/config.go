@@ -30,6 +30,15 @@ type Config struct {
 		RedirectURL  string `json:"redirect_url"`
 		SecureCookie string `json:"secure_cookie"`
 	} `json:"twitch_auth"`
+	// Since the bot needs access to user resources as well as api resources
+	// we will need developer specific vars.
+	// https://developer.spotify.com/documentation/web-api/tutorials/code-flow
+	SpotifyAuth struct {
+		ClientID     string `json:"client_id"`
+		ClientSecret string `json:"client_secret"`
+		RedirectURL  string `json:"redirect_url"`
+		SecureCookie string `json:"secure_cookie"`
+	} `json:"spotify_auth"`
 	Command struct {
 		Prefix          string `json:"prefix"`           // prefix to call commands from chat, like "!" or "."
 		DefaultCooldown int    `json:"default_cooldown"` // usually 0 or < 5 seconds
@@ -107,6 +116,22 @@ func (c *Config) CheckConfig() error {
 
 	if c.TwitchAuth.SecureCookie == "" {
 		return fmt.Errorf("missing key: twitch auth secure cookie")
+	}
+
+	if c.SpotifyAuth.ClientID == "" {
+		return fmt.Errorf("missing key: spotify auth client id")
+	}
+
+	if c.SpotifyAuth.ClientSecret == "" {
+		return fmt.Errorf("missing key: spotify auth client secret")
+	}
+
+	if c.SpotifyAuth.RedirectURL == "" {
+		return fmt.Errorf("missing key: spotify auth redirect url")
+	}
+
+	if c.SpotifyAuth.SecureCookie == "" {
+		return fmt.Errorf("missing key: spotify auth secure cookie")
 	}
 
 	if c.Command.Prefix == "" {

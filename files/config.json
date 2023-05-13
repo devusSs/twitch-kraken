@@ -19,6 +19,12 @@
     "redirect_url": "",
     "secure_cookie": "makethissensibleandsafe"
   },
+  "spotify_auth": {
+    "client_id": "",
+    "client_secret": "",
+    "redirect_url": "",
+    "secure_cookie": "makethissensibleandsafe"
+  },
   "command": {
     "prefix": "",
     "default_cooldown": 0
