@@ -13,11 +13,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/devusSs/twitch-kraken/internal/config"
 	"github.com/devusSs/twitch-kraken/internal/logging"
+	"github.com/devusSs/twitch-kraken/internal/utils"
 	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/twitch"
@@ -113,10 +116,22 @@ func InitTwitchAuth(cfg *config.Config) func(path string, handler handler) {
 func SetupTwitchAuth(handleFunc func(path string, handler handler), cfg *config.Config, wg *sync.WaitGroup) *http.Server {
 	handleFunc("/", handleRoot)
 	handleFunc("/login", handleLogin)
-	handleFunc("/twitch/redirect", handleOAuth2Callback)
 
-	// TODO: put port here from config
-	srv := &http.Server{Addr: ":9001"}
+	hostURLSplit := strings.Split(cfg.TwitchAuth.RedirectURL, ":")
+	portStrSplit := strings.Split(hostURLSplit[2], "/")
+	port, err := strconv.Atoi(portStrSplit[0])
+	if err != nil {
+		log.Fatalf("[%s] Error parsing Twitch auth port: %s\n", logging.ErrorSign, err.Error())
+	}
+
+	portStrSplit, err = utils.RemoveStringFromSlice(portStrSplit, 0)
+	if err != nil {
+		log.Fatalf("[%s] Error parsing Twitch auth url: %s\n", logging.ErrorSign, err.Error())
+	}
+
+	handleFunc(fmt.Sprintf("/%s", strings.Join(portStrSplit, "/")), handleOAuth2Callback)
+
+	srv := &http.Server{Addr: fmt.Sprintf(":%d", port)}
 
 	return srv
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/devusSs/twitch-kraken/internal/auth/authtwitch"
 	"github.com/devusSs/twitch-kraken/internal/config"
 	"github.com/devusSs/twitch-kraken/internal/logging"
+	"github.com/devusSs/twitch-kraken/internal/system"
 )
 
 // Actually perform the Twitch authentication.
@@ -39,7 +40,8 @@ func DoTwitchAuth(cfg *config.Config) {
 		for !gotAccessToken() {
 			continue
 		}
-		log.Printf("[%s] Got tokens and expiry, shutting down server in 5 seconds\n", logging.InfoSign)
+		system.CallClear()
+		log.Printf("[%s] Got Twitch tokens and expiry, shutting down server in 5 seconds\n", logging.InfoSign)
 		if err := shutdownTwitchAuth(srv, wg); err != nil {
 			log.Fatalf("[%s] Error shutting down Twitch auth server: %s\n", logging.ErrorSign, err.Error())
 		}
