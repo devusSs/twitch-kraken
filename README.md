@@ -22,6 +22,8 @@ Make sure you have a working [Postgres](https://www.postgresql.org/) instance ru
 
 You will also need a [Twitch](https://twitch.tv) account for your bot to use or you may use your own broadcaster acccount. Since Twitch does not allow logging in to the IRC server using your plain password, you will need to generate an oauth password. This can be done [here](https://twitchapps.com/tmi/). Please make sure you login with the account your bot is supposed to use.
 
+To use certain built-in [Twitch](https://twitch.tv) as well as [Spotify](https://spotify.com) features you will need a developer account on each platform. You can do that on [Twitch's dev platform](https://dev.twitch.tv) and [Spotify's dev platform](https://developers.spotify.com) respectively.
+
 The bot needs a valid config file to work. You may check the [example config]("./files/config.json") for more information. The config can be placed anywhere you'd like it to but the `-c` flag inside the program is configured to use `./files/config.json` as default input, so using that path is highly recommended.
 
 ## Building and running the app
