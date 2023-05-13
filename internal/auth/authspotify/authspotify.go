@@ -35,8 +35,7 @@ const (
 var (
 	ClientID     string
 	ClientSecret string
-	// TODO: change these
-	scopes       = []string{""}
+	scopes       = []string{"user-read-playback-state", "user-read-currently-playing"}
 	redirectURL  string
 	oauth2Config *oauth2.Config
 	cookieSecret []byte
