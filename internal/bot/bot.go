@@ -60,6 +60,12 @@ func (b *TwitchBot) SendHelloMessage() {
 	logging.WriteSuccess("Sent hello message to chat")
 }
 
+// Send a whisper message to the bot owner that an update is available.
+func (b *TwitchBot) SendUpdateNotification() {
+	b.SendMessage(fmt.Sprintf("@%s => New Bot version available!", b.Owner))
+	logging.WriteSuccess("Sent update message to chat")
+}
+
 // This function will block further execution until CTRL+C is hit.
 //
 // # NOTE: This function will NOT disconnect the bot. Use the default function Disconnect() for that.
