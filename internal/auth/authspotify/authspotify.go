@@ -1,8 +1,8 @@
-// Coded using official Twitch documentation.
+// Coded using official Twitch documentation, adapted to Spotify.
 //
 // https://github.com/twitchdev/authentication-go-sample/blob/main/oauth-authorization-code/main.go
 // All rights go to their owners.
-package authtwitch
+package authspotify
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	"github.com/devusSs/twitch-kraken/internal/utils"
 	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/twitch"
+	"golang.org/x/oauth2/spotify"
 )
 
 const (
@@ -35,7 +35,8 @@ const (
 var (
 	ClientID     string
 	ClientSecret string
-	scopes       = []string{"channel:manage:broadcast", "moderator:manage:banned_users", "moderation:read", "moderator:manage:chat_settings", "user:edit"}
+	// TODO: change these
+	scopes       = []string{""}
 	redirectURL  string
 	oauth2Config *oauth2.Config
 	cookieSecret []byte
@@ -46,17 +47,17 @@ var (
 	TokenExpiry  time.Time
 )
 
-// Init function to prepare bot for Twitch token generation.
-func InitTwitchAuth(cfg *config.Config) func(path string, handler handler) {
+// Init function to prepare bot for Spotify token generation.
+func InitSpotifyAuth(cfg *config.Config) func(path string, handler handler) {
 	// Init Client ID & Client Secret.
-	ClientID = cfg.TwitchAuth.ClientID
-	ClientSecret = cfg.TwitchAuth.ClientSecret
+	ClientID = cfg.SpotifyAuth.ClientID
+	ClientSecret = cfg.SpotifyAuth.ClientSecret
 
 	// Init Redirect URL.
-	redirectURL = cfg.TwitchAuth.RedirectURL
+	redirectURL = cfg.SpotifyAuth.RedirectURL
 
 	// Init Cookie Secret.
-	cookieSecret = []byte(cfg.TwitchAuth.SecureCookie)
+	cookieSecret = []byte(cfg.SpotifyAuth.SecureCookie)
 
 	// Init the Cookie Store.
 	cookieStore = sessions.NewCookieStore(cookieSecret)
@@ -69,7 +70,7 @@ func InitTwitchAuth(cfg *config.Config) func(path string, handler handler) {
 		ClientID:     ClientID,
 		ClientSecret: ClientSecret,
 		Scopes:       scopes,
-		Endpoint:     twitch.Endpoint,
+		Endpoint:     spotify.Endpoint,
 		RedirectURL:  redirectURL,
 	}
 
@@ -113,20 +114,20 @@ func InitTwitchAuth(cfg *config.Config) func(path string, handler handler) {
 }
 
 // Function that actually runs the local auth server.
-func SetupTwitchAuth(handleFunc func(path string, handler handler), cfg *config.Config, wg *sync.WaitGroup) *http.Server {
-	handleFunc("/twitch", handleRoot)
-	handleFunc("/login-twitch", handleLogin)
+func SetupSpotifyAuth(handleFunc func(path string, handler handler), cfg *config.Config, wg *sync.WaitGroup) *http.Server {
+	handleFunc("/spotify", handleRoot)
+	handleFunc("/login-spotify", handleLogin)
 
-	hostURLSplit := strings.Split(cfg.TwitchAuth.RedirectURL, ":")
+	hostURLSplit := strings.Split(cfg.SpotifyAuth.RedirectURL, ":")
 	portStrSplit := strings.Split(hostURLSplit[2], "/")
 	port, err := strconv.Atoi(portStrSplit[0])
 	if err != nil {
-		log.Fatalf("[%s] Error parsing Twitch auth port: %s\n", logging.ErrorSign, err.Error())
+		log.Fatalf("[%s] Error parsing Spotify auth port: %s\n", logging.ErrorSign, err.Error())
 	}
 
 	portStrSplit, err = utils.RemoveStringFromSlice(portStrSplit, 0)
 	if err != nil {
-		log.Fatalf("[%s] Error parsing Twitch auth url: %s\n", logging.ErrorSign, err.Error())
+		log.Fatalf("[%s] Error parsing Spotify auth url: %s\n", logging.ErrorSign, err.Error())
 	}
 
 	handleFunc(fmt.Sprintf("/%s", strings.Join(portStrSplit, "/")), handleOAuth2Callback)
@@ -138,9 +139,9 @@ func SetupTwitchAuth(handleFunc func(path string, handler handler), cfg *config.
 
 // Function that starts the server.
 // Should always be called as it's own goroutine.
-func StartTwitchAuth(srv *http.Server) {
+func StartSpotifyAuth(srv *http.Server) {
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatalf("[%s] Error starting Twitch auth server: %s\n", logging.ErrorSign, err.Error())
+		log.Fatalf("[%s] Error starting Spotify auth server: %s\n", logging.ErrorSign, err.Error())
 	}
 }
 
@@ -151,7 +152,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) (err error) {
 	// Get and replace the session cookie to prevent weird session bugs.
 	cookie, err := r.Cookie("oauth-session")
 	if err != nil {
-		if !strings.Contains(err.Error(), "http: named cookie not present") {
+		if err.Error() != "http: named cookie not present" {
 			log.Fatalf("[%s] Error getting oauth session cookie: %s\n", logging.ErrorSign, err.Error())
 		}
 	} else {
@@ -162,7 +163,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) (err error) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte(`<html><body><a href="/login-twitch">Login using Twitch</a></body></html>`))
+	_, err = w.Write([]byte(`<html><body><a href="/login-spotify">Login using Spotify</a></body></html>`))
 	if err != nil {
 		return err
 	}
@@ -170,7 +171,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) (err error) {
 	return
 }
 
-// HandleLogin is a Handler that redirects the user to Twitch for login, and provides the 'state'
+// HandleLogin is a Handler that redirects the user to Spotify for login, and provides the 'state'
 // parameter which protects against login CSRF.
 func handleLogin(w http.ResponseWriter, r *http.Request) (err error) {
 	session, err := cookieStore.Get(r, oauthSessionName)
@@ -239,7 +240,7 @@ func handleOAuth2Callback(w http.ResponseWriter, r *http.Request) (err error) {
 	RefreshToken = token.RefreshToken
 	TokenExpiry = token.Expiry
 
-	http.Redirect(w, r, "/twitch", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/spotify", http.StatusTemporaryRedirect)
 
 	return
 }
@@ -276,9 +277,9 @@ func annotateError(err error, annotation string, code int) error {
 type handler func(http.ResponseWriter, *http.Request) error
 
 // Refresh struct.
-type TwitchRefreshStruct struct {
-	AccessToken  string   `json:"access_token"`
-	RefreshToken string   `json:"refresh_token"`
-	Scope        []string `json:"scope"`
-	TokenType    string   `json:"token_type"`
+type SpotifyRefreshStruct struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	Scope       string `json:"scope"`
+	ExpiresIn   int    `json:"expires_in"`
 }

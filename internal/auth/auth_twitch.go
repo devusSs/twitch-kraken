@@ -37,11 +37,11 @@ func DoTwitchAuth(cfg *config.Config) {
 	// If there is an access token exit the http server.
 	atChecker := time.AfterFunc(1*time.Second, func() {
 		// Loop until we get an access token, refresh token and token expiry.
-		for !gotAccessToken() {
+		for !gotTwitchAccessToken() {
 			continue
 		}
 		system.CallClear()
-		log.Printf("[%s] Got Twitch tokens and expiry, shutting down server in 5 seconds\n", logging.InfoSign)
+		log.Printf("[%s] Got Twitch tokens and expiry, shutting down server in 2 seconds\n", logging.InfoSign)
 		if err := shutdownTwitchAuth(srv, wg); err != nil {
 			log.Fatalf("[%s] Error shutting down Twitch auth server: %s\n", logging.ErrorSign, err.Error())
 		}
@@ -50,7 +50,7 @@ func DoTwitchAuth(cfg *config.Config) {
 	// Shut down the Twitch auth server and app after 5 minutes.
 	// Only when we do not receive tokens and expiry until then.
 	time.AfterFunc(5*time.Minute, func() {
-		if !gotAccessToken() {
+		if !gotTwitchAccessToken() {
 			if err := shutdownTwitchAuth(srv, wg); err != nil {
 				log.Fatalf("[%s] Error shutting down Twitch auth server: %s\n", logging.ErrorSign, err.Error())
 			}
@@ -59,7 +59,7 @@ func DoTwitchAuth(cfg *config.Config) {
 		}
 	})
 
-	log.Printf("[%s] Please head to '%s' to authenticate\n", logging.InfoSign, srv.Addr)
+	log.Printf("[%s] Please head to 'http://localhost%s/twitch' to authenticate\n", logging.InfoSign, srv.Addr)
 	log.Printf("[%s] ATTENTION: The server will automatically be shut down in 5 minutes\n", logging.WarnSign)
 	log.Printf("[%s] Please make sure to authenticate until then\n", logging.WarnSign)
 
@@ -72,12 +72,12 @@ func DoTwitchAuth(cfg *config.Config) {
 
 // Helper function which checks if we have an access token, refresh token and token expiry.
 // Should be used as time.Ticker function (like time.Afterfunc()) to keep running.
-func gotAccessToken() bool {
+func gotTwitchAccessToken() bool {
 	return authtwitch.AccessToken != "" && authtwitch.RefreshToken != "" && !authtwitch.TokenExpiry.IsZero()
 }
 
 // Helper function which actually shuts down the server and decrements the wait group.
-// Use it after gotAccessToken() returns true.
+// Use it after gotTwitchAccessToken() returns true.
 func shutdownTwitchAuth(srv *http.Server, wg *sync.WaitGroup) error {
 	time.Sleep(2 * time.Second)
 
@@ -91,7 +91,7 @@ func shutdownTwitchAuth(srv *http.Server, wg *sync.WaitGroup) error {
 }
 
 // Function to refresh the token we got.
-func RefreshTokensFunc() error {
+func RefreshTwitchTokensFunc() error {
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", authtwitch.RefreshToken)
@@ -115,7 +115,7 @@ func RefreshTokensFunc() error {
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return fmt.Errorf("got unwated Twitch response code: %s", res.Status)
+		return fmt.Errorf("got unwanted Twitch response code: %s", res.Status)
 	}
 
 	body, err := io.ReadAll(res.Body)

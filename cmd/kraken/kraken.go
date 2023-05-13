@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/devusSs/twitch-kraken/internal/auth"
+	"github.com/devusSs/twitch-kraken/internal/auth/authspotify"
 	"github.com/devusSs/twitch-kraken/internal/auth/authtwitch"
 	"github.com/devusSs/twitch-kraken/internal/bot"
 	"github.com/devusSs/twitch-kraken/internal/bot/gatekeeper"
@@ -169,19 +170,41 @@ func main() {
 
 	// Authenticate against services here (Twitch, Spotify, ...).
 	// This is a blocking operation, code will not succeed.
+
+	// Start of Twitch authentication.
 	auth.DoTwitchAuth(cfg)
 
-	// Refresh the tokens before they expire again.
-	twitchPreDuration, err := time.ParseDuration("-60s")
+	// Refresh the Twitch tokens before they expire again.
+	twitchPreDuration, err := time.ParseDuration("-0.5h")
 	if err != nil {
 		log.Fatalf("[%s] Error parsing durations: %s\n", logging.ErrorSign, err.Error())
 	}
 
-	twitchAuthTicker := time.NewTicker(time.Duration(authtwitch.TokenExpiry.Add(twitchPreDuration).Second()))
+	twitchDuration := time.Until(authtwitch.TokenExpiry.Add(twitchPreDuration))
+	twitchAuthTicker := time.NewTicker(twitchDuration)
 	go func() {
 		for range twitchAuthTicker.C {
-			if err := auth.RefreshTokensFunc(); err != nil {
+			if err := auth.RefreshTwitchTokensFunc(); err != nil {
 				log.Fatalf("[%s] Error refreshing Twitch auth tokens: %s\n", logging.ErrorSign, err.Error())
+			}
+		}
+	}()
+
+	// Start of Spotify authentication.
+	auth.DoSpotifyAuth(cfg)
+
+	// Refresh the Spotify tokens before they expire again.
+	spotifyPreDuration, err := time.ParseDuration("-0.1h")
+	if err != nil {
+		log.Fatalf("[%s] Error parsing durations: %s\n", logging.ErrorSign, err.Error())
+	}
+
+	spotifyDuration := time.Until(authspotify.TokenExpiry.Add(spotifyPreDuration))
+	spotifyAuthTicker := time.NewTicker(spotifyDuration)
+	go func() {
+		for range spotifyAuthTicker.C {
+			if err := auth.RefreshSpotifyTokensFunc(); err != nil {
+				log.Fatalf("[%s] Error refreshing Spotify auth tokens: %s\n", logging.ErrorSign, err.Error())
 			}
 		}
 	}()
@@ -268,9 +291,10 @@ func main() {
 	}
 	wg.Done()
 
-	twitchAuthTicker.Stop()
-
 	logging.WriteSuccess("Successfully closed database connection")
+
+	twitchAuthTicker.Stop()
+	spotifyAuthTicker.Stop()
 
 	// DO NOT USE CONSOLE OR FILE LOGGERS AT THIS POINT ANYMORE
 	wg.Add(1)
