@@ -258,6 +258,17 @@ func main() {
 	// Setup needed functions to handle Twitch events.
 	twitchBot.SetupHandleFuncs(gateKeeper, newAppVersion)
 
+	// Handle the periodic update checks.
+	// Notify the Bot owner via Twitch chat if there is a new version available.
+	periodicUpdateHandler := time.NewTicker(12 * time.Hour)
+	go func() {
+		for range periodicUpdateHandler.C {
+			if newAppVersion != "" {
+				twitchBot.SendUpdateNotification(newAppVersion)
+			}
+		}
+	}()
+
 	// Wait group to handle async events.
 	wg := &sync.WaitGroup{}
 
@@ -305,6 +316,7 @@ func main() {
 	// Stop goroutines before exit so they do not (potentially) leak.
 	twitchAuthTicker.Stop()
 	spotifyAuthTicker.Stop()
+	periodicUpdateHandler.Stop()
 
 	// Need to check if we actually set up a periodic updater checker.
 	// Else we get a null pointer deference and the app panics.
