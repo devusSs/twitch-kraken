@@ -305,7 +305,12 @@ func main() {
 	// Stop goroutines before exit so they do not (potentially) leak.
 	twitchAuthTicker.Stop()
 	spotifyAuthTicker.Stop()
-	updateChecker.Stop()
+
+	// Need to check if we actually set up a periodic updater checker.
+	// Else we get a null pointer deference and the app panics.
+	if !*skipUpdates {
+		updateChecker.Stop()
+	}
 
 	// DO NOT USE CONSOLE OR FILE LOGGERS AT THIS POINT ANYMORE
 	wg.Add(1)
