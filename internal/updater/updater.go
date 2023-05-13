@@ -110,20 +110,21 @@ func DoUpdate(url string) error {
 	return nil
 }
 
-func PeriodicUpdateCheck() error {
+func PeriodicUpdateCheck() (string, error) {
 	_, versionCheck, _, err := FindLatestReleaseURL()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	newVersionAvailable, err := NewerVersionAvailable(versionCheck)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if newVersionAvailable {
-		log.Printf("[%s] New version available (%s). Please restart your app soon\n", logging.WarnSign, versionCheck)
+		log.Printf("[%s] New version available (%s). Please restart the app as soon as possible\n", logging.WarnSign, versionCheck)
+		return versionCheck, nil
 	}
 
-	return nil
+	return "", errors.New("unknown error")
 }

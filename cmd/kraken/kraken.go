@@ -26,6 +26,9 @@ import (
 func main() {
 	startTime := time.Now()
 
+	var updateChecker *time.Ticker
+	var newAppVersion string
+
 	/*
 		Usually the default flags will work fine.
 		Check the Makefile or documentation for any configuration questions.
@@ -99,15 +102,21 @@ func main() {
 		}
 
 		// Update check - setup periodic update check.
-		time.AfterFunc(1*time.Hour, func() {
-			if err := updater.PeriodicUpdateCheck(); err != nil {
-				log.Fatalf("[%s] Error on periodic update check: %s", logging.ErrorSign, err.Error())
+		updateChecker = time.NewTicker(24 * time.Hour)
+		go func() {
+			for range updateChecker.C {
+				newVersion, err := updater.PeriodicUpdateCheck()
+				if err != nil {
+					log.Fatalf("[%s] Error on periodic update check: %s", logging.ErrorSign, err.Error())
+				}
+
+				if newVersion != "" {
+					newAppVersion = newVersion
+				}
 			}
+		}()
 
-			// TODO: maybe print warning to Twitch chat as well? / or send whisper msg to owner
-		})
-
-		log.Printf("[%s] Set up periodic update check (1 hour)\n", logging.SuccessSign)
+		log.Printf("[%s] Set up periodic update check (24 hours)\n", logging.SuccessSign)
 	} else {
 		log.Printf("[%s] Skipping updates...\n", logging.InfoSign)
 	}
@@ -247,7 +256,7 @@ func main() {
 	twitchBot := bot.New(cfg, svc)
 
 	// Setup needed functions to handle Twitch events.
-	twitchBot.SetupHandleFuncs(gateKeeper)
+	twitchBot.SetupHandleFuncs(gateKeeper, newAppVersion)
 
 	// Wait group to handle async events.
 	wg := &sync.WaitGroup{}
@@ -293,8 +302,10 @@ func main() {
 
 	logging.WriteSuccess("Successfully closed database connection")
 
+	// Stop goroutines before exit so they do not (potentially) leak.
 	twitchAuthTicker.Stop()
 	spotifyAuthTicker.Stop()
+	updateChecker.Stop()
 
 	// DO NOT USE CONSOLE OR FILE LOGGERS AT THIS POINT ANYMORE
 	wg.Add(1)

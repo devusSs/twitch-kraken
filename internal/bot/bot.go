@@ -61,8 +61,8 @@ func (b *TwitchBot) SendHelloMessage() {
 }
 
 // Send a whisper message to the bot owner that an update is available.
-func (b *TwitchBot) SendUpdateNotification() {
-	b.SendMessage(fmt.Sprintf("@%s => New Bot version available!", b.Owner))
+func (b *TwitchBot) SendUpdateNotification(version string) {
+	b.SendMessage(fmt.Sprintf("@%s => New Bot version (%s) available!", b.Owner, version))
 	logging.WriteSuccess("Sent update message to chat")
 }
 
@@ -85,7 +85,7 @@ func (b *TwitchBot) Disconnect(wg *sync.WaitGroup) error {
 }
 
 // General function to setup handlers for all Twitch / TMI events.
-func (b *TwitchBot) SetupHandleFuncs(g *gatekeeper.GateKeeper) {
+func (b *TwitchBot) SetupHandleFuncs(g *gatekeeper.GateKeeper, newVersion string) {
 	// When we connect to the Twitch chat.
 	b.Client.OnConnect(func() {
 		logging.WriteSuccess("Successfully connected to Twitch")
@@ -204,6 +204,9 @@ func (b *TwitchBot) SetupHandleFuncs(g *gatekeeper.GateKeeper) {
 	b.Client.OnSelfJoinMessage(func(message twitch.UserJoinMessage) {
 		logging.WriteSuccess(fmt.Sprintf("Successfully joined channel \"%s\"", b.Channel))
 		b.SendHelloMessage()
+		if newVersion != "" {
+			b.SendUpdateNotification(newVersion)
+		}
 	})
 
 	// Disconnect event
