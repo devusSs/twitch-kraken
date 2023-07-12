@@ -6,7 +6,7 @@ require (
 	github.com/fatih/color v1.15.0
 	github.com/gempir/go-twitch-irc/v4 v4.0.0
 	github.com/lib/pq v1.10.9
-	golang.org/x/oauth2 v0.9.0
+	golang.org/x/oauth2 v0.10.0
 )
 
 require (
@@ -18,10 +18,10 @@ require (
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf // indirect
 	github.com/tcnksm/go-gitconfig v0.1.2 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
-	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/net v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 )
 
 require (
@@ -30,5 +30,5 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/rhysd/go-github-selfupdate v1.2.3
-	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/sys v0.10.0 // indirect
 )
